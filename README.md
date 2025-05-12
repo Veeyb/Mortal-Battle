@@ -1,6 +1,7 @@
 # 🥷🏻Mortal-Battle
 ⚔️Game Fighting Pixel Art Side Scroll 2D yang EPIC membuatmu Nostalgia!
-![image](https://github.com/user-attachments/assets/aaf59aca-cf4a-4179-8caf-82d87c78ef8b)
+![image](https://github.com/user-attachments/assets/2a5ff9ed-9cbd-4a13-93b4-86926da7d544)
+
 
 
 ---
