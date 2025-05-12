@@ -24,3 +24,9 @@ Game masih dalam tahap pengembangan.Berikut beberapa fitur yang sudah tersedia d
 -Memiliki fitur memilih map *background ✅
 
 *note beberapa fitur mungkin akan berubah seiring berjalanya progress
+
+## ▶️How To Play
+1.Download Zip semua filenya.
+2.Extract dalam 1 folder.
+3.Buka folder dalam VSCode.
+4.Run Main.py
