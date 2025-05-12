@@ -103,7 +103,7 @@ def main_menu():
     while menu_running:
         draw_main_menu_bg()  # Draw the main menu background
 
-        draw_text("Mortal Battle", count_font, WHITE, SCREEN_WIDTH // 2 - 180, SCREEN_HEIGHT // 4)
+        draw_text("Mortal Battle", count_font, WHITE, SCREEN_WIDTH // 2 - 255, SCREEN_HEIGHT // 4)
 
         # Draw start and exit buttons
         draw_text("Start", menu_font, WHITE, SCREEN_WIDTH // 2 - 60, SCREEN_HEIGHT // 2)
