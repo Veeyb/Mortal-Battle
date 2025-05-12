@@ -3,12 +3,12 @@
 
 ---
 
-##📖Story Line (Story Mode)
+## 📖Story Line (Story Mode)
 Petarung hebat yang menantang semua ahli beladiri untuk menjadi yang terbaik sepanjang sejarah!
 
 ---
 
-##🔃Progress
+## 🔃Progress
 Game masih dalam tahap pengembangan.Berikut beberapa fitur yang sudah tersedia dan yang direncanakan:
 -Memiliki fitur Duel MultiPlayer ✅
 -Memiliki fitur Story Mode ❌ (on going)
