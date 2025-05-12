@@ -33,3 +33,9 @@ Game masih dalam tahap pengembangan.Berikut beberapa fitur yang sudah tersedia d
 3.Buka folder dalam VSCode.
 
 4.Run Main.py
+
+*NOTE
+
+Player 1 Bergerak Menggunakan WAD dan atack menggunakan R & T.
+
+Player 2 Bergerak Menggunakan Arrow Key dan attack menggunakan Numpad 1 & 2.
