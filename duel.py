@@ -49,6 +49,11 @@ class DuelFighter(Fighter):
             return self.character.current_character
         return self.character
 
+    def check_attack_hit(self, target, damage):
+        distance = abs(self.rect.centerx - target.rect.centerx)
+        if distance <= 100:
+            target.take_damage(damage)
+
     def handle_input(self, screen_width, screen_height, screen, target, round_over, keys, prev_keys):
         current_time = pygame.time.get_ticks()
 
@@ -98,13 +103,16 @@ class DuelFighter(Fighter):
             return keys[key] and not prev_keys[key]
 
         if just_pressed(key_map["jump"]) and not self.is_jumping and not self.is_ultimate and (current_time - self.last_jump_time) > self.jump_cooldown:
-            if "JUMP" in self.active_character.animation_list and self.active_character.animation_list["JUMP"]:
-                self.is_jumping = True
-                self.velocity_y = -15
-                self.action = "JUMP"
-                self.frame_index = 0
-                self.last_jump_time = current_time
-                self.last_action_time = current_time
+            self.is_jumping = True
+            self.velocity_y = -15
+            if self.char_key == "samurai7":
+                self.action = "IDLE"
+            else:
+                if "JUMP" in self.active_character.animation_list and self.active_character.animation_list["JUMP"]:
+                    self.action = "JUMP"
+            self.frame_index = 0
+            self.last_jump_time = current_time
+            self.last_action_time = current_time
 
         if self.is_jumping:
             self.rect.y += self.velocity_y
@@ -154,22 +162,19 @@ class DuelFighter(Fighter):
             if just_pressed(key_map["ultimate"]) and not self.is_ultimate:
                 if self.char_key == "samurai7":
                     if hasattr(self.character, "ultimate") and callable(getattr(self.character, "ultimate")):
+                        self.character.ultimate()
                         self.is_ultimate = True
-                        self.ultimate_started = False
+                        self.ultimate_started = True
                         self.last_action_time = current_time
+                        self.action = "SHOUT"
+                        self.frame_index = 0
                 else:
                     if "ULTIMATE" in self.active_character.animation_list and self.active_character.animation_list["ULTIMATE"]:
                         self.is_ultimate = True
-                        self.ultimate_started = False
+                        self.ultimate_started = True
                         self.last_action_time = current_time
-
-        if self.is_ultimate:
-            if not getattr(self, "ultimate_started", False):
-                if hasattr(self.character, "ultimate") and callable(getattr(self.character, "ultimate")):
-                    self.character.ultimate()
-                self.action = "SHOUT" if self.char_key == "samurai7" else "ULTIMATE"
-                self.frame_index = 0
-                self.ultimate_started = True
+                        self.action = "ULTIMATE"
+                        self.frame_index = 0
 
         if not (self.is_attacking or self.is_attack3_active or self.is_throwing or self.is_ultimate or self.is_jumping):
             if dx != 0:
@@ -177,14 +182,20 @@ class DuelFighter(Fighter):
             else:
                 self.action = "IDLE"
 
-    def check_attack_hit(self, target, damage):
-        distance = abs(self.rect.centerx - target.rect.centerx)
-        if distance <= 100:
-            target.take_damage(damage)
-
     def update(self):
         anim_list = self.active_character.animation_list
         frame_index = self.active_character.frame_index
+
+        if self.char_key == "samurai7" and self.character and getattr(self.character, "transforming", False):
+            shout_frames = self.character.normal.animation_list.get('SHOUT', [])
+            if shout_frames and frame_index >= len(shout_frames) - 1:
+                self.character.transforming = False
+                self.character.mode = "flaming"
+                self.character.current_character = self.character.flaming
+                self.character.change_action("IDLE")
+                self.is_ultimate = False
+                self.action = "IDLE"
+                self.frame_index = 0
 
         if not self.alive:
             self.active_character.change_action("DEATH")
@@ -195,12 +206,13 @@ class DuelFighter(Fighter):
                 self.active_character.frame_index = len(death_frames) - 1
             return
 
-        if self.action == "HURT":
-            hurt_frames = anim_list.get("HURT", [])
-            if frame_index >= len(hurt_frames) - 1:
-                self.action = "IDLE"
-        else:
-            self.active_character.change_action(self.action)
+        if not (self.char_key == "samurai7" and self.character and getattr(self.character, "transforming", False)):
+            if self.action == "HURT":
+                hurt_frames = anim_list.get("HURT", [])
+                if frame_index >= len(hurt_frames) - 1:
+                    self.action = "IDLE"
+            else:
+                self.active_character.change_action(self.action)
 
         self.active_character.flip = self.flip
         self.active_character.update()
@@ -230,12 +242,13 @@ class DuelFighter(Fighter):
                 if self.target:
                     damage = int(self.attack_damage * self.ultimate_multiplier)
                     self.check_attack_hit(self.target, damage)
-                self.is_ultimate = False
-                self.action = "IDLE"
+                if not (self.char_key == "samurai7" and self.character and getattr(self.character, "transforming", False)):
+                    self.is_ultimate = False
+                    self.action = "IDLE"
 
         if self.is_jumping:
             frames = len(anim_list.get("JUMP", []))
-            if frame_index >= frames - 1 and self.rect.y >= 310:
+            if (frame_index >= frames - 1 if frames > 0 else True) and self.rect.y >= 310:
                 self.is_jumping = False
                 self.action = "IDLE"
                 self.frame_index = 0
@@ -260,14 +273,12 @@ class DuelFighter(Fighter):
             if self.character:
                 self.character.change_action("HURT")
 
-
 def duel_mode(p1_char, p2_char, map_key, screen, clock, sword_fx, characters, paused_flag, resume_state=None):
     RED = (255, 0, 0)
     YELLOW = (255, 255, 0)
     WHITE = (255, 255, 255)
     BLACK = (0, 0, 0)
 
-    # Jika resume_state ada, unpack state; jika tidak buat baru
     if resume_state:
         (fighter_1, fighter_2, score, round_over, round_over_time, intro_count, last_count_update, prev_keys) = resume_state
     else:
@@ -320,7 +331,6 @@ def duel_mode(p1_char, p2_char, map_key, screen, clock, sword_fx, characters, pa
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     paused_flag[0] = True
-                    # Simpan state saat pause agar bisa dilanjutkan
                     return (fighter_1, fighter_2, score, round_over, round_over_time, intro_count, last_count_update, keys)
 
         screen.fill(BLACK)
@@ -374,7 +384,6 @@ def duel_mode(p1_char, p2_char, map_key, screen, clock, sword_fx, characters, pa
             screen.blit(victory_img, (360, 150))
 
             if pygame.time.get_ticks() - round_over_time > 2000:
-                # Reset round tanpa reset score
                 def reset_round():
                     nonlocal fighter_1, fighter_2, round_over, round_over_time, intro_count
                     fighter_1 = DuelFighter(1, 200, 310, False, p1_char, sword_fx, characters=characters)
