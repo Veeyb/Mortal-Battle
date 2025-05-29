@@ -4,7 +4,7 @@ import assets
 from character import load_all_characters
 from charselection import run_character_selection
 from duel import duel_mode
-from story import story_mode  # import story_mode yang baru dibuat
+from story import story_mode
 
 pygame.init()
 mixer.init()
@@ -71,13 +71,13 @@ def pause_menu():
 
                 if btn_continue.collidepoint(mx, my):
                     paused[0] = False
-                    return False
+                    return False  # Continue
                 elif btn_restart.collidepoint(mx, my):
                     paused[0] = False
-                    return True
+                    return True   # Restart
                 elif btn_back.collidepoint(mx, my):
                     paused[0] = False
-                    return None
+                    return None   # Back
 
 def main_menu():
     running = True
@@ -158,16 +158,21 @@ def map_selection():
                     if chars == "back":
                         continue
                     paused[0] = False
+                    resume_state = None  # untuk menyimpan state duel jika pause continue
                     while True:
-                        duel_mode(chars[1], chars[2], selected_map, screen, clock, sword_fx, characters, paused)
+                        resume_state = duel_mode(chars[1], chars[2], selected_map, screen, clock, sword_fx, characters, paused, resume_state)
                         if paused[0]:
                             result = pause_menu()
+                            paused[0] = False
                             if result is None:
                                 running = False
                                 break
                             elif result is True:
-                                paused[0] = False
+                                resume_state = None  # reset state karena restart
                                 continue
+                            elif result is False:
+                                # continue game, tetap di loop, duel_mode akan dipanggil dengan resume_state
+                                pass
                         else:
                             break
                 elif SCREEN_WIDTH * 3 // 4 - 100 <= mx <= SCREEN_WIDTH * 3 // 4 + 200 and SCREEN_HEIGHT // 2 - 100 <= my <= SCREEN_HEIGHT // 2 + 100:
@@ -176,16 +181,20 @@ def map_selection():
                     if chars == "back":
                         continue
                     paused[0] = False
+                    resume_state = None
                     while True:
-                        duel_mode(chars[1], chars[2], selected_map, screen, clock, sword_fx, characters, paused)
+                        resume_state = duel_mode(chars[1], chars[2], selected_map, screen, clock, sword_fx, characters, paused, resume_state)
                         if paused[0]:
                             result = pause_menu()
+                            paused[0] = False
                             if result is None:
                                 running = False
                                 break
                             elif result is True:
-                                paused[0] = False
+                                resume_state = None
                                 continue
+                            elif result is False:
+                                pass
                         else:
                             break
 
