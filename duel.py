@@ -57,7 +57,6 @@ class DuelFighter(Fighter):
 
         dx = 0
 
-        # Key mapping sesuai player
         if self.player == 1:
             key_map = {
                 "left": pygame.K_a,
@@ -88,7 +87,6 @@ class DuelFighter(Fighter):
 
         self.move(dx, 0, screen_width, screen_height)
 
-        # Update flip dan direction
         if target.rect.centerx > self.rect.centerx:
             self.flip = False
             self.direction = 1
@@ -96,11 +94,9 @@ class DuelFighter(Fighter):
             self.flip = True
             self.direction = -1
 
-        # Helper cek transisi tombol ditekan baru (rising edge)
         def just_pressed(key):
             return keys[key] and not prev_keys[key]
 
-        # Jump
         if just_pressed(key_map["jump"]) and not self.is_jumping and not self.is_ultimate and (current_time - self.last_jump_time) > self.jump_cooldown:
             if "JUMP" in self.active_character.animation_list and self.active_character.animation_list["JUMP"]:
                 self.is_jumping = True
@@ -120,7 +116,6 @@ class DuelFighter(Fighter):
                 self.action = "IDLE"
                 self.frame_index = 0
 
-        # Attack dan ultimate hanya saat tombol baru ditekan dan cooldown terpenuhi
         if not (self.is_attacking or self.is_attack3_active or self.is_throwing or self.is_ultimate) and (current_time - self.last_action_time) >= self.action_cooldown:
             if just_pressed(key_map["attack1"]) and "ATTACK1" in self.active_character.animation_list and self.active_character.animation_list["ATTACK1"]:
                 self.is_attacking = True
@@ -266,53 +261,54 @@ class DuelFighter(Fighter):
                 self.character.change_action("HURT")
 
 
-def duel_mode(p1_char, p2_char, map_key, screen, clock, sword_fx, characters, paused_flag):
+def duel_mode(p1_char, p2_char, map_key, screen, clock, sword_fx, characters, paused_flag, resume_state=None):
     RED = (255, 0, 0)
     YELLOW = (255, 255, 0)
     WHITE = (255, 255, 255)
     BLACK = (0, 0, 0)
 
-    fighter_1 = None
-    fighter_2 = None
-    score = [0, 0]
-    round_over = False
-    round_over_time = 0
-    intro_count = 3
-    restart_game = False
-    last_count_update = pygame.time.get_ticks()
-    bg_image_local = assets.get_image(map_key)
-
-    def reset_round():
-        nonlocal fighter_1, fighter_2, score, round_over, round_over_time, intro_count, restart_game
-        fighter_1 = DuelFighter(1, 200, 310, False, p1_char, sword_fx, characters=characters)
-        fighter_2 = DuelFighter(2, 700, 310, True, p2_char, sword_fx, characters=characters)
-        fighter_1.target = fighter_2
-        fighter_2.target = fighter_1
-
-        fighter_1.health = 100
-        fighter_1.alive = True
-        fighter_1.action = "IDLE"
-        fighter_1.frame_index = 0
-
-        fighter_2.health = 100
-        fighter_2.alive = True
-        fighter_2.action = "IDLE"
-        fighter_2.frame_index = 0
-
-        if p1_char == "samurai7":
-            fighter_1.character.reset()
-        if p2_char == "samurai7":
-            fighter_2.character.reset()
-
+    # Jika resume_state ada, unpack state; jika tidak buat baru
+    if resume_state:
+        (fighter_1, fighter_2, score, round_over, round_over_time, intro_count, last_count_update, prev_keys) = resume_state
+    else:
+        fighter_1 = None
+        fighter_2 = None
         score = [0, 0]
-        intro_count = 3
         round_over = False
         round_over_time = 0
-        restart_game = False
+        intro_count = 3
+        last_count_update = pygame.time.get_ticks()
+        prev_keys = pygame.key.get_pressed()
 
-    reset_round()
+        def reset_round():
+            nonlocal fighter_1, fighter_2, round_over, round_over_time, intro_count
+            fighter_1 = DuelFighter(1, 200, 310, False, p1_char, sword_fx, characters=characters)
+            fighter_2 = DuelFighter(2, 700, 310, True, p2_char, sword_fx, characters=characters)
+            fighter_1.target = fighter_2
+            fighter_2.target = fighter_1
 
-    prev_keys = pygame.key.get_pressed()
+            fighter_1.health = 100
+            fighter_1.alive = True
+            fighter_1.action = "IDLE"
+            fighter_1.frame_index = 0
+
+            fighter_2.health = 100
+            fighter_2.alive = True
+            fighter_2.action = "IDLE"
+            fighter_2.frame_index = 0
+
+            if p1_char == "samurai7":
+                fighter_1.character.reset()
+            if p2_char == "samurai7":
+                fighter_2.character.reset()
+
+            intro_count = 3
+            round_over = False
+            round_over_time = 0
+
+        reset_round()
+
+    bg_image_local = assets.get_image(map_key)
 
     while True:
         clock.tick(60)
@@ -320,11 +316,12 @@ def duel_mode(p1_char, p2_char, map_key, screen, clock, sword_fx, characters, pa
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return
+                return None
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     paused_flag[0] = True
-                    return
+                    # Simpan state saat pause agar bisa dilanjutkan
+                    return (fighter_1, fighter_2, score, round_over, round_over_time, intro_count, last_count_update, keys)
 
         screen.fill(BLACK)
         scaled_bg = pygame.transform.scale(bg_image_local, (screen.get_width(), screen.get_height()))
@@ -377,7 +374,34 @@ def duel_mode(p1_char, p2_char, map_key, screen, clock, sword_fx, characters, pa
             screen.blit(victory_img, (360, 150))
 
             if pygame.time.get_ticks() - round_over_time > 2000:
+                # Reset round tanpa reset score
+                def reset_round():
+                    nonlocal fighter_1, fighter_2, round_over, round_over_time, intro_count
+                    fighter_1 = DuelFighter(1, 200, 310, False, p1_char, sword_fx, characters=characters)
+                    fighter_2 = DuelFighter(2, 700, 310, True, p2_char, sword_fx, characters=characters)
+                    fighter_1.target = fighter_2
+                    fighter_2.target = fighter_1
+
+                    fighter_1.health = 100
+                    fighter_1.alive = True
+                    fighter_1.action = "IDLE"
+                    fighter_1.frame_index = 0
+
+                    fighter_2.health = 100
+                    fighter_2.alive = True
+                    fighter_2.action = "IDLE"
+                    fighter_2.frame_index = 0
+
+                    if p1_char == "samurai7":
+                        fighter_1.character.reset()
+                    if p2_char == "samurai7":
+                        fighter_2.character.reset()
+
+                    intro_count = 3
+                    round_over = False
+                    round_over_time = 0
+
                 reset_round()
 
         pygame.display.update()
-        prev_keys = keys  # Update prev_keys di akhir frame
+        prev_keys = keys
