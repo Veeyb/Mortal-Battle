@@ -39,6 +39,6 @@ Game masih dalam tahap pengembangan.Berikut beberapa fitur yang sudah tersedia d
 
 *NOTE
 
-Player 1 Bergerak Menggunakan WAD dan attack menggunakan E & R & T.
+Player 1 Bergerak Menggunakan WAD dan attack 1-3 menggunakan E & R & T.
 
-Player 2 Bergerak Menggunakan Arrow Key dan attack menggunakan Numpad 1 & 2 & 3.
+Player 2 Bergerak Menggunakan Arrow Key dan attack 1-3 menggunakan Numpad 1 & 2 & 3.
