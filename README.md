@@ -42,3 +42,5 @@ Game masih dalam tahap pengembangan.Berikut beberapa fitur yang sudah tersedia d
 Player 1 Bergerak Menggunakan WAD dan attack 1-3 menggunakan E & R & T.
 
 Player 2 Bergerak Menggunakan Arrow Key dan attack 1-3 menggunakan Numpad 1 & 2 & 3.
+
+Link Youtube: https://youtu.be/OOvQilTSwLk?si=iwxIwBnfU_Dg9KlU
